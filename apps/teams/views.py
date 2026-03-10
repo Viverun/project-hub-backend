@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.db.utils import OperationalError, ProgrammingError
 from .models import Team, JoinRequest
 from .serializers import TeamSerializer, JoinRequestSerializer
 
@@ -9,6 +10,18 @@ User = get_user_model()
 
 
 class TeamCreateView(APIView):
+    def get(self, request):
+        """Get teams for authenticated user"""
+        if not hasattr(request, 'user_id'):
+            return Response({'success': False, 'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            teams = Team.objects.filter(members__id=request.user_id, is_active=True).distinct()
+            serializer = TeamSerializer(teams, many=True)
+            return Response({'success': True, 'data': serializer.data})
+        except (OperationalError, ProgrammingError):
+            return Response({'success': True, 'data': []})
+
     def post(self, request):
         """Create a new team (authenticated)"""
         if not hasattr(request, 'user_id'):
