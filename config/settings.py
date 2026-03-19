@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
-
-load_dotenv()
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env', override=True)
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 
@@ -59,12 +59,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+db_engine_raw = os.getenv('DB_ENGINE', 'mysql').strip().lower()
+
+if db_engine_raw.startswith('django.db.backends.'):
+    db_engine = db_engine_raw
+elif db_engine_raw in {'mysql'}:
+    db_engine = 'django.db.backends.mysql'
+elif db_engine_raw in {'sqlite', 'sqlite3'}:
+    db_engine = 'django.db.backends.sqlite3'
+else:
+    db_engine = 'django.db.backends.mysql'
+
+if db_engine == 'django.db.backends.sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / os.getenv('SQLITE_DB_NAME', 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'project_hub'),
+            'USER': os.getenv('DB_USER', 'project_hub_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'project_hub_password'),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -113,6 +139,10 @@ CORS_ALLOWED_ORIGINS = os.getenv(
     'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002'
 ).split(',')
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-github-session',
+]
+
 # JWT Configuration
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-key')
 JWT_ALGORITHM = os.getenv('JWT_ALGORITHM', 'HS256')
@@ -122,7 +152,12 @@ JWT_REFRESH_EXPIRATION_DAYS = int(os.getenv('JWT_REFRESH_EXPIRATION_DAYS', '7'))
 # External APIs
 GITHUB_API_TOKEN = os.getenv('GITHUB_API_TOKEN', '')
 GITHUB_API_URL = os.getenv('GITHUB_API_URL', 'https://api.github.com')
+GITHUB_OAUTH_CLIENT_ID = os.getenv('GITHUB_OAUTH_CLIENT_ID', '')
+GITHUB_OAUTH_CLIENT_SECRET = os.getenv('GITHUB_OAUTH_CLIENT_SECRET', '')
+GITHUB_OAUTH_REDIRECT_URI = os.getenv('GITHUB_OAUTH_REDIRECT_URI', 'http://localhost:5000/api/user/github/oauth/callback')
+GITHUB_OAUTH_SCOPE = os.getenv('GITHUB_OAUTH_SCOPE', 'read:user user:email repo')
 LEETCODE_API_URL = os.getenv('LEETCODE_API_URL', 'https://leetcode.com/graphql')
+FRONTEND_APP_URL = os.getenv('FRONTEND_APP_URL', 'http://localhost:3000')
 
 # Custom User Model
 AUTH_USER_MODEL = 'auth.User'

@@ -23,6 +23,7 @@ wheels/
 
 # Virtual Environment
 venv/
+.venv/
 ENV/
 env/
 
@@ -36,11 +37,53 @@ env/
 # Environment
 .env
 .env.local
+.env.development
+.env.production
+.env.*.local
+.env.*.development
+.env.*.production
 
 # Database
 *.sqlite3
 db.sqlite3
+*.db
 
 # Logs
 logs/
 *.log
+*.logs
+celery-beat-schedule
+
+# Static & Media Files
+staticfiles/
+/static/
+/media/
+uploads/
+
+# Cache & Temporary
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pot
+
+# OS Files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-*
+
+# Misc
+.mypy_cache/
+.dmypy.json
+dmypy.json
+node_modules/
+*.pid
+*.tmp
+*.bak
+*.key
+*.pem
+secrets/
+.secrets/
+.django_secret/

@@ -63,7 +63,7 @@ class LoginView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(email=serializer.validated_data['email'])
+            user = User.objects.get(email__iexact=serializer.validated_data['email'])
 
             if not user.check_password(serializer.validated_data['password']):
                 return Response({

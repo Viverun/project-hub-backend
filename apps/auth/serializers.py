@@ -11,9 +11,10 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, write_only=True)
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+        normalized = value.strip().lower()
+        if User.objects.filter(email__iexact=normalized).exists():
             raise serializers.ValidationError("Email already registered")
-        return value
+        return normalized
 
     def validate_password(self, value):
         if len(value) < 6:
@@ -25,11 +26,19 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
+    def validate_email(self, value):
+        return value.strip().lower()
+
 
 class UserSerializer(serializers.ModelSerializer):
+    unique_id = serializers.SerializerMethodField()
+
+    def get_unique_id(self, obj):
+        return f"PH-{str(obj.id).split('-')[0].upper()}"
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'unique_id', 'username', 'email', 'first_name', 'last_name']
 
 
 class AuthResponseSerializer(serializers.Serializer):

@@ -36,13 +36,20 @@ pip install -r requirements.txt
 ### 3. Database Setup
 
 ```bash
-# Create MySQL database
-# Open MySQL CLI and run:
-# CREATE DATABASE project_hub;
-
-# Or use this command:
-mysql -u root -p -e "CREATE DATABASE project_hub;"
+# Create MySQL database and an app-specific user
+# On Ubuntu, root often uses auth_socket and may fail with password auth.
+sudo mysql -e "CREATE DATABASE IF NOT EXISTS project_hub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+sudo mysql -e "CREATE USER IF NOT EXISTS 'project_hub_user'@'localhost' IDENTIFIED BY 'project_hub_password';"
+sudo mysql -e "GRANT ALL PRIVILEGES ON project_hub.* TO 'project_hub_user'@'localhost'; FLUSH PRIVILEGES;"
 ```
+
+Or run the helper script (recommended):
+
+```bash
+./scripts/setup_mysql.sh
+```
+
+The script automatically generates a strong DB password (if needed for MySQL password policy) and writes the final DB settings into `.env`.
 
 ### 4. Environment Configuration
 
@@ -50,11 +57,11 @@ The `.env` file is already configured with defaults:
 
 ```env
 # MySQL Configuration
-DB_ENGINE=django.db.backends.mysql
+DB_ENGINE=mysql
 DB_NAME=project_hub
-DB_USER=root
-DB_PASSWORD=
-DB_HOST=localhost
+DB_USER=project_hub_user
+DB_PASSWORD=project_hub_password
+DB_HOST=127.0.0.1
 DB_PORT=3306
 
 # JWT Configuration
@@ -69,7 +76,18 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 # External APIs (Optional)
 GITHUB_API_KEY=your-github-token
 LEETCODE_API_KEY=your-leetcode-token
+
+# GitHub OAuth (Required for authorized profile linking)
+GITHUB_OAUTH_CLIENT_ID=your-github-oauth-client-id
+GITHUB_OAUTH_CLIENT_SECRET=your-github-oauth-client-secret
+GITHUB_OAUTH_REDIRECT_URI=http://localhost:5000/api/user/github/oauth/callback
+GITHUB_OAUTH_SCOPE=read:user user:email repo
+FRONTEND_APP_URL=http://localhost:3000
 ```
+
+Create a GitHub OAuth app with callback URL:
+
+`http://localhost:5000/api/user/github/oauth/callback`
 
 ### 5. Run Migrations & Start Server
 
@@ -85,6 +103,19 @@ python manage.py runserver 5000
 ```
 
 Server will be available at: `http://localhost:5000`
+
+## Troubleshooting MySQL Login
+
+If you see this error:
+
+`django.db.utils.OperationalError: (1698, "Access denied for user 'root'@'localhost'")`
+
+It usually means MySQL root is configured with socket authentication on Linux. Use a dedicated DB user (`project_hub_user`) as shown above, then verify your `.env` has matching values before running:
+
+```bash
+python manage.py migrate
+python manage.py runserver 5000
+```
 
 ## API Endpoints
 
