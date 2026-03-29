@@ -7,7 +7,7 @@ urlpatterns = [
     path('github/oauth/callback', views.GitHubOAuthCallbackView.as_view(), name='github-oauth-callback'),
     path('github/oauth/stats', views.GitHubAuthorizedStatsView.as_view(), name='github-oauth-stats'),
     path('github/oauth/disconnect', views.GitHubOAuthDisconnectView.as_view(), name='github-oauth-disconnect'),
-    path('<uuid:user_id>', views.UserDetailView.as_view(), name='user-detail'),
     path('github/<str:username>', views.GitHubStatsView.as_view(), name='github-stats'),
     path('search', views.UserSearchView.as_view(), name='user-search'),
+    path('<str:user_id>', views.UserDetailView.as_view(), name='user-detail'),
 ]

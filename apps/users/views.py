@@ -499,19 +499,35 @@ class UserSearchView(APIView):
 
     def get(self, request):
         """Search users"""
-        query = request.query_params.get('q', '')
-        limit = int(request.query_params.get('limit', 10))
+        query = (request.query_params.get('q') or '').strip()
 
-        if not query:
-            return Response({'success': False, 'message': 'Query parameter required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            limit = int(request.query_params.get('limit', 25))
+        except (TypeError, ValueError):
+            limit = 25
 
-        users = User.objects.filter(username__icontains=query)[:limit]
+        limit = max(1, min(limit, 100))
+
+        users = User.objects.all()
+        if query:
+            users = users.filter(
+                Q(username__icontains=query)
+                | Q(email__icontains=query)
+                | Q(first_name__icontains=query)
+                | Q(last_name__icontains=query)
+            )
+
+        users = users.order_by('first_name', 'username')[:limit]
         return Response({
             'success': True,
             'data': [{
                 'id': str(user.id),
                 'username': user.username,
                 'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
                 'profile_picture_url': getattr(user, 'profile_picture_url', None),
+                'github_username': getattr(user, 'github_username', None),
+                'leetcode_username': getattr(user, 'leetcode_username', None),
             } for user in users]
         })

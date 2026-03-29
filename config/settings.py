@@ -3,10 +3,18 @@ Django settings for Project Hub API
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 from corsheaders.defaults import default_headers
+
+# Enable PyMySQL as MySQLdb for Django
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env', override=True)
@@ -154,7 +162,7 @@ GITHUB_API_TOKEN = os.getenv('GITHUB_API_TOKEN', '')
 GITHUB_API_URL = os.getenv('GITHUB_API_URL', 'https://api.github.com')
 GITHUB_OAUTH_CLIENT_ID = os.getenv('GITHUB_OAUTH_CLIENT_ID', '')
 GITHUB_OAUTH_CLIENT_SECRET = os.getenv('GITHUB_OAUTH_CLIENT_SECRET', '')
-GITHUB_OAUTH_REDIRECT_URI = os.getenv('GITHUB_OAUTH_REDIRECT_URI', 'http://localhost:5000/api/user/github/oauth/callback')
+GITHUB_OAUTH_REDIRECT_URI = os.getenv('GITHUB_OAUTH_REDIRECT_URI', 'http://localhost:8000/api/user/github/oauth/callback')
 GITHUB_OAUTH_SCOPE = os.getenv('GITHUB_OAUTH_SCOPE', 'read:user user:email repo')
 LEETCODE_API_URL = os.getenv('LEETCODE_API_URL', 'https://leetcode.com/graphql')
 FRONTEND_APP_URL = os.getenv('FRONTEND_APP_URL', 'http://localhost:3000')
